@@ -19,11 +19,14 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    networks: [default, rede-delivery]
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports: ["15672:15672"]   # painel; tire daqui se não quiser expor
     restart: unless-stopped
+    # rede-delivery: o serviço de delivery publica os eventos em amqp://guest:guest@rabbitmq:5672
+    networks: [default, rede-delivery]
 
 networks:
   rede-delivery:
