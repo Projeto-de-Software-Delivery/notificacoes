@@ -1,7 +1,7 @@
 services:
   notificacoes:
     build: .
-    ports: ["3004:3004"]
+    ports: ["8080:8080"]
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379

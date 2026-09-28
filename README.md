@@ -146,17 +146,17 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Sobem três containers: o serviço (porta 3004), o Redis e o RabbitMQ (painel em `http://localhost:15672`, guest/guest).
+Sobem três containers: o serviço (porta 8080), o Redis e o RabbitMQ (painel em `http://localhost:15672`, guest/guest).
 
 ```bash
 docker compose logs -f notificacoes   # espere "[amqp] consumindo notificacoes.pedidos"
-curl http://localhost:3004/health
+curl http://localhost:8080/health
 ```
 
 Para testar sem o broker, injete um evento direto no dispatcher:
 
 ```bash
-curl -X POST http://localhost:3004/dev/eventos/pedido.validado \
+curl -X POST http://localhost:8080/dev/eventos/pedido.validado \
   -H 'Content-Type: application/json' \
   -d '{"pedido_id":10,"cliente_id":42,"loja_id":7}'
 ```

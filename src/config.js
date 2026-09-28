@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 export const config = {
-  port: Number(process.env.PORT ?? 3004),
+  port: Number(process.env.PORT ?? 8080),
   jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-troque-isso',
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   rabbitUrl: process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672',

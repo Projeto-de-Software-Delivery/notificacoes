@@ -47,19 +47,19 @@ jobs:
         run: |
           node src/index.js > app.log 2>&1 &
           for _ in $(seq 1 30); do
-            curl -sf http://localhost:3004/health && break
+            curl -sf http://localhost:8080/health && break
             sleep 1
           done
 
       - name: Health check
-        run: curl -sf http://localhost:3004/health | grep -q '"status":"UP"'
+        run: curl -sf http://localhost:8080/health | grep -q '"status":"UP"'
 
       - name: Consumer conectou no RabbitMQ
         run: grep -q "\[amqp\] consumindo" app.log
 
       - name: Dispara um evento pelo dispatcher
         run: |
-          curl -sf -X POST http://localhost:3004/dev/eventos/pedido.validado \
+          curl -sf -X POST http://localhost:8080/dev/eventos/pedido.validado \
             -H 'Content-Type: application/json' \
             -d '{"pedido_id":1,"cliente_id":42,"loja_id":7}'
           sleep 1
@@ -134,10 +134,8 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           mkdir -p entrega
-          cp docker-compose.prod.yml entrega/docker-compose.yml
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > entrega/firebase.json
           cat > entrega/.env <<ENV
-          IMAGE=$DOCKERHUB_USERNAME/$IMAGEM:${{ github.sha }}
           PORT=8080
           JWT_SECRET=$JWT_SECRET
           REDIS_URL=$REDIS_URL
@@ -151,7 +149,7 @@ jobs:
           HOST_TEST: ${{ secrets.HOST_TEST }}
         run: |
           ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" "mkdir -p $PASTA"
-          scp -i ~/.ssh/deploy entrega/docker-compose.yml entrega/.env entrega/firebase.json \
+          scp -i ~/.ssh/deploy entrega/.env entrega/firebase.json \
             "$USUARIO@$HOST_TEST:$PASTA/"
 
       - name: Sobe a versão nova
@@ -159,6 +157,9 @@ jobs:
           HOST_TEST: ${{ secrets.HOST_TEST }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        # Tudo na rede-delivery. Os aliases (notificacoes, redis, rabbitmq) são os nomes
+        # que os outros containers usam: notificacoes:8080, redis:6379, rabbitmq:5672.
+        # O heredoc não tem aspas: os $ são expandidos aqui no runner, e o \$PWD na VM.
         run: |
           ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" bash -s <<REMOTO
             set -e
@@ -166,8 +167,41 @@ jobs:
             chmod 600 .env firebase.json
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker network inspect rede-delivery >/dev/null 2>&1 || docker network create rede-delivery
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker image prune -f
-            docker compose ps
+
+            # Containers antigos do docker compose (só existem na primeira vez).
+            docker rm -f servico-notificacoes-notificacoes-1 servico-notificacoes-redis-1 servico-notificacoes-rabbitmq-1 2>/dev/null || true
+            docker network rm servico-notificacoes_default 2>/dev/null || true
+
+            # Redis e RabbitMQ: só cria se ainda não existem (não perde fila nem device_tokens a cada deploy).
+            docker inspect notificacoes-redis >/dev/null 2>&1 || docker run -d \
+              --name notificacoes-redis \
+              --network rede-delivery --network-alias redis \
+              -v notificacoes-redis-data:/data \
+              --restart unless-stopped \
+              redis:7-alpine
+
+            docker inspect notificacoes-rabbitmq >/dev/null 2>&1 || docker run -d \
+              --name notificacoes-rabbitmq --hostname notificacoes-rabbitmq \
+              --network rede-delivery --network-alias rabbitmq \
+              -p 15672:15672 \
+              -v notificacoes-rabbitmq-data:/var/lib/rabbitmq \
+              --restart unless-stopped \
+              rabbitmq:3-management-alpine
+
+            # O serviço: sempre troca pela imagem nova. Escuta na 8080, a VM expõe na 8082.
+            docker pull $DOCKERHUB_USERNAME/$IMAGEM:${{ github.sha }}
+            docker rm -f servico-notificacoes 2>/dev/null || true
+            docker run -d \
+              --name servico-notificacoes \
+              --network rede-delivery --network-alias notificacoes \
+              -p 8082:8080 \
+              --env-file .env \
+              -e NODE_ENV=production \
+              -e GOOGLE_APPLICATION_CREDENTIALS=/app/firebase.json \
+              -v "\$PWD/firebase.json:/app/firebase.json:ro" \
+              --restart unless-stopped \
+              $DOCKERHUB_USERNAME/$IMAGEM:${{ github.sha }}
+
+            docker image prune -af
+            docker ps --filter name=notificacoes
           REMOTO

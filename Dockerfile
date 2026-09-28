@@ -5,6 +5,6 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY src ./src
 USER node
-EXPOSE 3004
-HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:${PORT:-3004}/health || exit 1
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:${PORT:-8080}/health || exit 1
 CMD ["node", "src/index.js"]
