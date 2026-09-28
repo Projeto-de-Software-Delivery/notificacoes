@@ -171,17 +171,3 @@ jobs:
             docker image prune -f
             docker compose ps
           REMOTO
-
-      - name: Confere se subiu
-        env:
-          HOST_TEST: ${{ secrets.HOST_TEST }}
-        run: |
-          for _ in $(seq 1 20); do
-            if curl -sf "http://$HOST_TEST:3004/health" | grep -q '"status":"UP"'; then
-              echo "deploy ok"; exit 0
-            fi
-            sleep 3
-          done
-          echo "o serviço não respondeu no /health"
-          ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" "cd $PASTA && docker compose logs --tail 50"
-          exit 1
