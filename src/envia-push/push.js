@@ -1,5 +1,7 @@
 import fs from 'node:fs';
-import admin from 'firebase-admin';
+// API modular: nas versões novas o default import não traz mais admin.credential.
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import { config } from '../config.js';
 import { devices } from './devices.js';
 
@@ -10,8 +12,8 @@ let messaging = null;
 if (config.firebaseCredentials && fs.existsSync(config.firebaseCredentials)) {
   // Credencial vazia/inválida não derruba o serviço: o WebSocket continua funcionando.
   try {
-    admin.initializeApp({ credential: admin.credential.applicationDefault() });
-    messaging = admin.messaging();
+    initializeApp({ credential: applicationDefault() });
+    messaging = getMessaging();
     console.log('[push] FCM habilitado');
   } catch (err) {
     console.error(`[push] credencial do Firebase inválida (${err.message}) — push em modo log`);
