@@ -8,9 +8,14 @@ import { devices } from './devices.js';
 let messaging = null;
 
 if (config.firebaseCredentials && fs.existsSync(config.firebaseCredentials)) {
-  admin.initializeApp({ credential: admin.credential.applicationDefault() });
-  messaging = admin.messaging();
-  console.log('[push] FCM habilitado');
+  // Credencial vazia/inválida não derruba o serviço: o WebSocket continua funcionando.
+  try {
+    admin.initializeApp({ credential: admin.credential.applicationDefault() });
+    messaging = admin.messaging();
+    console.log('[push] FCM habilitado');
+  } catch (err) {
+    console.error(`[push] credencial do Firebase inválida (${err.message}) — push em modo log`);
+  }
 } else {
   console.log('[push] sem credenciais do Firebase — push em modo log');
 }
