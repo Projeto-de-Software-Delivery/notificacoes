@@ -1,7 +1,7 @@
 # Serviço de Notificações
 
 Parte do app de delivery. Ele **escuta os eventos do pedido no RabbitMQ** e entrega o status atualizado ao app: em tempo real via **WebSocket** (Socket.IO) para quem está com o app aberto, e por **Push Notification** (FCM, que também entrega no iOS via APNs) para quem está com o app fechado.
-.
+..
 O serviço tem duas metades bem separadas:
 
 | | Entrada — **RabbitMQ** | Saída — **WebSocket** | Saída — **Push** |
