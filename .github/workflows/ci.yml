@@ -74,6 +74,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # O driver padrão (docker) não exporta cache type=gha; o buildx cria um builder docker-container.
+      - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
