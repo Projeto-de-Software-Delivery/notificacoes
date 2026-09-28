@@ -1,0 +1,22 @@
+services:
+  notificacoes:
+    build: .
+    ports: ["3004:3004"]
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: development   # habilita /dev/eventos; troque para production no deploy
+    depends_on: [redis, rabbitmq]
+    restart: unless-stopped
+    # para push real, monte a service account do Firebase:
+    # volumes: ["./firebase.json:/app/firebase.json:ro"]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports: ["5672:5672", "15672:15672"]   # 15672 = painel web (guest/guest)
+    restart: unless-stopped

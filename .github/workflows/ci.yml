@@ -1,0 +1,173 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+env:
+  IMAGEM: servico-notificacoes
+
+jobs:
+  # 1. Sobe Redis + RabbitMQ de verdade e confere que o serviço fala com os dois.
+  smoke:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports: ['5672:5672']
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-secret' }}
+      REDIS_URL: redis://localhost:6379
+      RABBITMQ_URL: amqp://guest:guest@localhost:5672
+      # Sem GOOGLE_APPLICATION_CREDENTIALS o push roda em modo log — é o que queremos no CI.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sobe o serviço
+        run: |
+          node src/index.js > app.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:3004/health && break
+            sleep 1
+          done
+
+      - name: Health check
+        run: curl -sf http://localhost:3004/health | grep -q '"status":"UP"'
+
+      - name: Consumer conectou no RabbitMQ
+        run: grep -q "\[amqp\] consumindo" app.log
+
+      - name: Dispara um evento pelo dispatcher
+        run: |
+          curl -sf -X POST http://localhost:3004/dev/eventos/pedido.validado \
+            -H 'Content-Type: application/json' \
+            -d '{"pedido_id":1,"cliente_id":42,"loja_id":7}'
+          sleep 1
+          cat app.log
+
+  # 2. Publica a imagem no Docker Hub.
+  imagem:
+    needs: smoke
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGEM }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGEM }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 3. Entra na VM por SSH e sobe a imagem nova.
+  deploy:
+    needs: imagem
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    env:
+      PASTA: ~/servico-notificacoes
+      USUARIO: ${{ vars.SSH_USER || 'ubuntu' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepara a chave SSH
+        env:
+          KEY_TEST: ${{ secrets.KEY_TEST }}
+          HOST_TEST: ${{ secrets.HOST_TEST }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY_TEST" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          ssh-keyscan -H "$HOST_TEST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Monta o .env e a service account do Firebase
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          mkdir -p entrega
+          cp docker-compose.prod.yml entrega/docker-compose.yml
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > entrega/firebase.json
+          cat > entrega/.env <<ENV
+          IMAGE=$DOCKERHUB_USERNAME/$IMAGEM:${{ github.sha }}
+          PORT=3004
+          JWT_SECRET=$JWT_SECRET
+          REDIS_URL=$REDIS_URL
+          RABBITMQ_URL=$RABBITMQ_URL
+          RABBITMQ_EXCHANGE=pedidos
+          RABBITMQ_QUEUE=notificacoes.pedidos
+          ENV
+
+      - name: Copia para a VM
+        env:
+          HOST_TEST: ${{ secrets.HOST_TEST }}
+        run: |
+          ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" "mkdir -p $PASTA"
+          scp -i ~/.ssh/deploy entrega/docker-compose.yml entrega/.env entrega/firebase.json \
+            "$USUARIO@$HOST_TEST:$PASTA/"
+
+      - name: Sobe a versão nova
+        env:
+          HOST_TEST: ${{ secrets.HOST_TEST }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" bash -s <<REMOTO
+            set -e
+            cd $PASTA
+            chmod 600 .env firebase.json
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+            docker compose ps
+          REMOTO
+
+      - name: Confere se subiu
+        env:
+          HOST_TEST: ${{ secrets.HOST_TEST }}
+        run: |
+          for _ in $(seq 1 20); do
+            if curl -sf "http://$HOST_TEST:3004/health" | grep -q '"status":"UP"'; then
+              echo "deploy ok"; exit 0
+            fi
+            sleep 3
+          done
+          echo "o serviço não respondeu no /health"
+          ssh -i ~/.ssh/deploy "$USUARIO@$HOST_TEST" "cd $PASTA && docker compose logs --tail 50"
+          exit 1

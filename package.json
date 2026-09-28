@@ -1,0 +1,21 @@
+{
+  "name": "servico-notificacoes",
+  "version": "1.0.0",
+  "description": "Serviço de Notificações do app de delivery (RabbitMQ -> WebSocket + Push)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "amqplib": "^2.2.0",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.5.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.4"
+  },
+  "type": "module"
+}
