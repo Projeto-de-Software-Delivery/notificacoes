@@ -115,6 +115,9 @@ jobs:
           chmod 600 ~/.ssh/deploy
           [ -n "$HOST_TEST" ] || { echo "::error::secret HOST_TEST vazio ou inexistente"; exit 1; }
           [ -n "$KEY_TEST" ]  || { echo "::error::secret KEY_TEST vazio ou inexistente"; exit 1; }
+          case "$HOST_TEST" in
+            *BEGIN*|-*|*$'\n'*) echo "::error::HOST_TEST não parece um IP/hostname (tem a chave privada aí?)"; exit 1 ;;
+          esac
           for _ in 1 2 3; do
             ssh-keyscan -T 10 -H "$HOST_TEST" >> ~/.ssh/known_hosts && exit 0
             sleep 5
