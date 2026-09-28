@@ -138,7 +138,7 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > entrega/firebase.json
           cat > entrega/.env <<ENV
           IMAGE=$DOCKERHUB_USERNAME/$IMAGEM:${{ github.sha }}
-          PORT=3004
+          PORT=8080
           JWT_SECRET=$JWT_SECRET
           REDIS_URL=$REDIS_URL
           RABBITMQ_URL=$RABBITMQ_URL
