@@ -113,7 +113,14 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$KEY_TEST" > ~/.ssh/deploy
           chmod 600 ~/.ssh/deploy
-          ssh-keyscan -H "$HOST_TEST" >> ~/.ssh/known_hosts 2>/dev/null
+          [ -n "$HOST_TEST" ] || { echo "::error::secret HOST_TEST vazio ou inexistente"; exit 1; }
+          [ -n "$KEY_TEST" ]  || { echo "::error::secret KEY_TEST vazio ou inexistente"; exit 1; }
+          for _ in 1 2 3; do
+            ssh-keyscan -T 10 -H "$HOST_TEST" >> ~/.ssh/known_hosts && exit 0
+            sleep 5
+          done
+          echo "::error::não consegui falar com $HOST_TEST na porta 22 (VM desligada, IP errado ou firewall bloqueando o GitHub Actions)"
+          exit 1
 
       - name: Monta o .env e a service account do Firebase
         env:
@@ -155,6 +162,7 @@ jobs:
             cd $PASTA
             chmod 600 .env firebase.json
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker network inspect rede-delivery >/dev/null 2>&1 || docker network create rede-delivery
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f

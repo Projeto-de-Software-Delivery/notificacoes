@@ -11,6 +11,8 @@ services:
     volumes: ["./firebase.json:/app/firebase.json:ro"]
     depends_on: [redis, rabbitmq]
     restart: unless-stopped
+    # default: fala com redis/rabbitmq; rede-delivery: os outros serviços acham ele como notificacoes:3004
+    networks: [default, rede-delivery]
 
   # Se o REDIS_URL/RABBITMQ_URL apontarem para serviço gerenciado,
   # pode apagar os dois blocos abaixo.
@@ -22,3 +24,7 @@ services:
     image: rabbitmq:3-management-alpine
     ports: ["15672:15672"]   # painel; tire daqui se não quiser expor
     restart: unless-stopped
+
+networks:
+  rede-delivery:
+    external: true   # já existe na VM (docker network create rede-delivery)
