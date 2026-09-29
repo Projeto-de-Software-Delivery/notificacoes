@@ -11,7 +11,7 @@ Base: `http://localhost:8080`. `/devices` e `/sessions/me` exigem `Authorization
 ```bash
 TOKEN=<seu JWT>
 
-# Healthcheck (sem auth) → 200 {"status":"UP","redis":true} ou 503
+# Healthcheck (sem auth) → 200 {"status":"UP","redis":true} ou 503.
 curl http://localhost:8080/health
 
 # Registra o device_token do usuário (após o login) → 201
