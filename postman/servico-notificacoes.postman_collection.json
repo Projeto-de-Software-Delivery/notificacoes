@@ -5,16 +5,52 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://44.192.118.93:8082" },
-    { "key": "jwtSecret", "value": "dev-secret-troque-isso" },
-    { "key": "role", "value": "cliente" },
-    { "key": "sub", "value": "42" },
-    { "key": "token", "value": "" },
-    { "key": "deviceToken", "value": "device-teste-123" }
+    {
+      "key": "baseUrl",
+      "value": "http://44.192.118.93:8082"
+    },
+    {
+      "key": "jwtSecret",
+      "value": "dev-secret-troque-isso"
+    },
+    {
+      "key": "role",
+      "value": "cliente"
+    },
+    {
+      "key": "sub",
+      "value": "42"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "deviceToken",
+      "value": "device-teste-123"
+    },
+    {
+      "key": "rabbitApi",
+      "value": "http://44.192.118.93:15672"
+    },
+    {
+      "key": "rabbitUser",
+      "value": "guest"
+    },
+    {
+      "key": "rabbitPass",
+      "value": "guest"
+    }
   ],
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
@@ -41,7 +77,9 @@
         }
       ],
       "request": {
-        "auth": { "type": "noauth" },
+        "auth": {
+          "type": "noauth"
+        },
         "method": "GET",
         "header": [],
         "url": "{{baseUrl}}/health",
@@ -51,7 +89,9 @@
     {
       "name": "Health",
       "request": {
-        "auth": { "type": "noauth" },
+        "auth": {
+          "type": "noauth"
+        },
         "method": "GET",
         "header": [],
         "url": "{{baseUrl}}/health"
@@ -61,8 +101,16 @@
       "name": "Registrar device",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"device_token\": \"{{deviceToken}}\"\n}" },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_token\": \"{{deviceToken}}\"\n}"
+        },
         "url": "{{baseUrl}}/devices"
       }
     },
@@ -89,51 +137,267 @@
         {
           "name": "pedido.criado",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}"
+            },
             "url": "{{baseUrl}}/dev/eventos/pedido.criado"
           }
         },
         {
           "name": "pedido.validado",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}"
+            },
             "url": "{{baseUrl}}/dev/eventos/pedido.validado"
           }
         },
         {
           "name": "entrega.aceita",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+            },
             "url": "{{baseUrl}}/dev/eventos/entrega.aceita"
           }
         },
         {
           "name": "pedido.retirado",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+            },
             "url": "{{baseUrl}}/dev/eventos/pedido.retirado"
           }
         },
         {
           "name": "pedido.entregue",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+            },
             "url": "{{baseUrl}}/dev/eventos/pedido.entregue"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RabbitMQ: publicar eventos",
+      "description": "Publica no exchange \"pedidos\" pela API do painel do RabbitMQ, como os outros serviços fariam. Funciona em produção (ao contrário do /dev/eventos). Resposta esperada: {\"routed\":true}. O cliente_id do payload precisa ser o sub do token para o aviso chegar em você.",
+      "item": [
+        {
+          "name": "pedido.criado",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.criado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7}\",\n  \"payload_encoding\": \"string\"\n}"
+            },
+            "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
+          }
+        },
+        {
+          "name": "pedido.validado",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.validado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7}\",\n  \"payload_encoding\": \"string\"\n}"
+            },
+            "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
+          }
+        },
+        {
+          "name": "entrega.aceita",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"entrega.aceita\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+            },
+            "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
+          }
+        },
+        {
+          "name": "pedido.retirado",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.retirado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+            },
+            "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
+          }
+        },
+        {
+          "name": "pedido.entregue",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{rabbitUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{rabbitPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.entregue\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+            },
+            "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
         }
       ]

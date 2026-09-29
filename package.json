@@ -17,5 +17,8 @@
     "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.8.4"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
 }
