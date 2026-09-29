@@ -30,7 +30,10 @@ function auth(req, res, next) {
 }
 
 app.get('/health', async (_req, res) => {
-  const redisOk = (await redis.ping().catch(() => null)) === 'PONG';
+  // Com o Redis fora do ar o ioredis enfileira o comando para sempre; o timeout
+  // faz o /health responder DOWN em vez de travar a requisição.
+  const timeout = new Promise((r) => setTimeout(r, 2000, null));
+  const redisOk = (await Promise.race([redis.ping().catch(() => null), timeout])) === 'PONG';
   res.status(redisOk ? 200 : 503).json({ status: redisOk ? 'UP' : 'DOWN', redis: redisOk });
 });
 

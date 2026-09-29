@@ -1,6 +1,46 @@
 # Serviço de Notificações
 
 Parte do app de delivery. Ele **escuta os eventos do pedido no RabbitMQ** e entrega o status atualizado ao app: em tempo real via **WebSocket** (Socket.IO) para quem está com o app aberto, e por **Push Notification** (FCM, que também entrega no iOS via APNs) para quem está com o app fechado.
+
+## Rotas — como chamar
+
+Base: `http://localhost:8080`. `/devices` e `/sessions/me` exigem `Authorization: Bearer <JWT>` (claims `sub` e `role`: `cliente` | `loja` | `entregador`). Veja [como gerar um JWT de teste](#rodando).
+
+**Postman:** importe `postman/servico-notificacoes.postman_collection.json` e rode primeiro **"0. Gerar token (dev)"**. Ele gera o JWT sozinho e as outras rotas já usam esse token. Para simular outro usuário, troque as variáveis `role` e `sub` da collection.
+
+```bash
+TOKEN=<seu JWT>
+
+# Healthcheck (sem auth) → 200 {"status":"UP","redis":true} ou 503
+curl http://localhost:8080/health
+
+# Registra o device_token do usuário (após o login) → 201
+curl -X POST http://localhost:8080/devices \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"device_token":"abc123"}'
+
+# Remove o device_token (no logout) → 204
+curl -X DELETE http://localhost:8080/devices/abc123 \
+  -H "Authorization: Bearer $TOKEN"
+
+# Sockets abertos e devices registrados do usuário → 200
+curl http://localhost:8080/sessions/me \
+  -H "Authorization: Bearer $TOKEN"
+
+# Só fora de produção: injeta um evento direto no dispatcher, sem RabbitMQ → 202
+# routingKey: pedido.criado | pedido.validado | entrega.aceita | pedido.retirado | pedido.entregue
+curl -X POST http://localhost:8080/dev/eventos/pedido.validado \
+  -H 'Content-Type: application/json' \
+  -d '{"pedido_id":10,"cliente_id":42,"loja_id":7}'
+```
+
+WebSocket (Socket.IO), na mesma porta:
+
+```js
+const socket = io('http://localhost:8080', { auth: { token } });
+socket.on('pedido:status', (msg) => console.log(msg));
+```
 ..
 O serviço tem duas metades bem separadas:
 

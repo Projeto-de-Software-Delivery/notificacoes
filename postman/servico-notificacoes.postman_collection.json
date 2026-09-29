@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "Serviço de Notificações",
+    "description": "Rotas do serviço de notificações. Rode primeiro \"Gerar token (dev)\": ele assina um JWT com o secret de desenvolvimento e salva em {{token}}, usado pelas demais rotas. Troque as variáveis role/sub da collection para simular outro usuário (cliente, loja, entregador).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://44.192.118.93:8082" },
+    { "key": "jwtSecret", "value": "dev-secret-troque-isso" },
+    { "key": "role", "value": "cliente" },
+    { "key": "sub", "value": "42" },
+    { "key": "token", "value": "" },
+    { "key": "deviceToken", "value": "device-teste-123" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "0. Gerar token (dev)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Assina um JWT HS256 com o secret de dev, como o backend faria.",
+              "const b64url = (wa) => CryptoJS.enc.Base64.stringify(wa).replace(/=+$/, '').replace(/\\+/g, '-').replace(/\\//g, '_');",
+              "const enc = (obj) => b64url(CryptoJS.enc.Utf8.parse(JSON.stringify(obj)));",
+              "const role = pm.collectionVariables.get('role');",
+              "const sub = pm.collectionVariables.get('sub');",
+              "const header = enc({ alg: 'HS256', typ: 'JWT' });",
+              "const payload = enc({ role, sub: isNaN(sub) ? sub : Number(sub), iat: Math.floor(Date.now() / 1000) });",
+              "const assinatura = b64url(CryptoJS.HmacSHA256(header + '.' + payload, pm.collectionVariables.get('jwtSecret')));",
+              "const token = header + '.' + payload + '.' + assinatura;",
+              "pm.collectionVariables.set('token', token);",
+              "console.log('token gerado para', role + ':' + sub, token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health",
+        "description": "Gera o token em {{token}} (script de pré-requisição) e aproveita para chamar o /health."
+      }
+    },
+    {
+      "name": "Health",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Registrar device",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"device_token\": \"{{deviceToken}}\"\n}" },
+        "url": "{{baseUrl}}/devices"
+      }
+    },
+    {
+      "name": "Minhas sessões",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/sessions/me"
+      }
+    },
+    {
+      "name": "Remover device",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/devices/{{deviceToken}}"
+      }
+    },
+    {
+      "name": "Dev: simular eventos",
+      "description": "Só fora de produção. Injeta o evento direto no dispatcher, sem passar pelo RabbitMQ. Não exige token.",
+      "item": [
+        {
+          "name": "pedido.criado",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}" },
+            "url": "{{baseUrl}}/dev/eventos/pedido.criado"
+          }
+        },
+        {
+          "name": "pedido.validado",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}" },
+            "url": "{{baseUrl}}/dev/eventos/pedido.validado"
+          }
+        },
+        {
+          "name": "entrega.aceita",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "url": "{{baseUrl}}/dev/eventos/entrega.aceita"
+          }
+        },
+        {
+          "name": "pedido.retirado",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "url": "{{baseUrl}}/dev/eventos/pedido.retirado"
+          }
+        },
+        {
+          "name": "pedido.entregue",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}" },
+            "url": "{{baseUrl}}/dev/eventos/pedido.entregue"
+          }
+        }
+      ]
+    }
+  ]
+}
