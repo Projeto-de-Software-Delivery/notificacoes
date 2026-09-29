@@ -131,15 +131,12 @@
       }
     },
     {
-      "name": "Dev: simular eventos",
-      "description": "Só fora de produção. Injeta o evento direto no dispatcher, sem passar pelo RabbitMQ. Não exige token.",
+      "name": "Simular eventos (sem RabbitMQ)",
+      "description": "Injeta o evento direto no dispatcher. Na VM (produção) exige o token da collection; localmente não. O cliente_id/loja_id/entregador_id do body precisam bater com o sub do seu token para o aviso chegar em você.",
       "item": [
         {
           "name": "pedido.criado",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -157,9 +154,6 @@
         {
           "name": "pedido.validado",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -177,9 +171,6 @@
         {
           "name": "entrega.aceita",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -197,9 +188,6 @@
         {
           "name": "pedido.retirado",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
@@ -217,9 +205,6 @@
         {
           "name": "pedido.entregue",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {

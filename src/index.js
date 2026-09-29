@@ -60,17 +60,18 @@ app.get('/sessions/me', auth, async (req, res) => {
   });
 });
 
-// Atalho de desenvolvimento: injeta um evento sem passar pelo RabbitMQ.
-if (process.env.NODE_ENV !== 'production') {
-  app.post('/dev/eventos/:routingKey', async (req, res) => {
-    const { routingKey } = req.params;
-    if (!TOPICOS.includes(routingKey)) {
-      return res.status(404).json({ erro: 'tópico desconhecido', topicos: TOPICOS });
-    }
-    await dispatch(io, routingKey, req.body);
-    res.status(202).json({ ok: true });
-  });
-}
+// Atalho de teste: injeta um evento sem passar pelo RabbitMQ.
+// Em produção exige JWT, para ninguém de fora disparar notificações falsas.
+const authEmProducao = process.env.NODE_ENV === 'production' ? auth : (_req, _res, next) => next();
+
+app.post('/dev/eventos/:routingKey', authEmProducao, async (req, res) => {
+  const { routingKey } = req.params;
+  if (!TOPICOS.includes(routingKey)) {
+    return res.status(404).json({ erro: 'tópico desconhecido', topicos: TOPICOS });
+  }
+  await dispatch(io, routingKey, req.body);
+  res.status(202).json({ ok: true });
+});
 
 server.listen(config.port, () => console.log(`[http] Serviço Notificações na porta ${config.port}`));
 

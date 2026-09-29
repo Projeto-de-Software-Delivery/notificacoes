@@ -28,7 +28,7 @@ curl -X DELETE http://localhost:8080/devices/abc123 \
 curl http://localhost:8080/sessions/me \
   -H "Authorization: Bearer $TOKEN"
 
-# Só fora de produção: injeta um evento direto no dispatcher, sem RabbitMQ → 202
+# Injeta um evento direto no dispatcher, sem RabbitMQ → 202 (em produção exige o header Authorization)
 # routingKey: pedido.criado | pedido.validado | entrega.aceita | pedido.retirado | pedido.entregue
 curl -X POST http://localhost:8080/dev/eventos/pedido.validado \
   -H 'Content-Type: application/json' \
@@ -173,7 +173,7 @@ O WebSocket só alcança quem está com o app aberto. Se o usuário **não tem n
 | `POST` | `/devices` | Registra `{ "device_token": "..." }` depois do login |
 | `DELETE` | `/devices/:token` | Remove o token no logout |
 | `GET` | `/sessions/me` | Sockets abertos e devices registrados do usuário |
-| `POST` | `/dev/eventos/:routingKey` | Só fora de produção: injeta um evento direto no dispatcher, pulando o RabbitMQ |
+| `POST` | `/dev/eventos/:routingKey` | Injeta um evento direto no dispatcher, pulando o RabbitMQ. Em produção exige JWT |
 
 Todas menos o `/health` exigem `Authorization: Bearer <JWT>`, com as claims `sub` e `role` (`cliente` | `loja` | `entregador`).
 
