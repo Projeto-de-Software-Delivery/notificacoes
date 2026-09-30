@@ -19,7 +19,7 @@ export async function dispatch(io, routingKey, evento) {
     destinos.map(async ({ to, title, body, push = true }) => {
       io.to(room(to)).emit('pedido:status', {
         evento: routingKey,
-        pedido_id: evento.pedido_id,
+        pedido_id: evento.pedidoId,
         status,
         title,
         body,
@@ -30,7 +30,7 @@ export async function dispatch(io, routingKey, evento) {
         await sendPush(to, {
           title,
           body,
-          data: { evento: routingKey, pedido_id: evento.pedido_id, status },
+          data: { evento: routingKey, pedido_id: evento.pedidoId, status },
         });
       }
     }),

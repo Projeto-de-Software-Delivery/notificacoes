@@ -32,7 +32,7 @@ curl http://localhost:8080/sessions/me \
 # routingKey: pedido.criado | pedido.validado | entrega.aceita | pedido.retirado | pedido.entregue
 curl -X POST http://localhost:8080/dev/eventos/pedido.validado \
   -H 'Content-Type: application/json' \
-  -d '{"pedido_id":10,"cliente_id":42,"loja_id":7}'
+  -d '{"pedidoId":10,"clienteId":42,"lojaId":7}'
 ```
 
 WebSocket (Socket.IO), na mesma porta:
@@ -111,10 +111,16 @@ Esta metade é só consumo — o serviço **não publica** nada no broker.
 | `pedido.retirado` | A_CAMINHO | Cliente |
 | `pedido.entregue` | ENTREGUE | Cliente, Loja e Entregador |
 
-O payload precisa trazer os IDs dos envolvidos, já que o serviço não consulta outros bancos (Database-per-Service):
+A mensagem chega no envelope definido em `payloads.md` (contrato KAN-13), e o `data` precisa trazer os IDs dos envolvidos, já que o serviço não consulta outros bancos (Database-per-Service):
 
 ```json
-{ "pedido_id": 10, "cliente_id": 42, "loja_id": 7, "entregador_id": 13 }
+{
+  "eventId": "b1f3...",
+  "eventType": "pedido.criado",
+  "version": 1,
+  "occurredAt": "2026-09-30T14:00:00Z",
+  "data": { "pedidoId": 10, "clienteId": 42, "lojaId": 7, "entregadorId": 13 }
+}
 ```
 
 Para mudar quem recebe o quê (ou adicionar um evento novo), edite `src/recebe-rabbitmq/eventos.js` — é o único arquivo que liga evento → destinatários. Marque `push: false` num destino quando o aviso for só informativo e não valer acordar o celular.
@@ -198,7 +204,7 @@ Para testar sem o broker, injete um evento direto no dispatcher:
 ```bash
 curl -X POST http://localhost:8080/dev/eventos/pedido.validado \
   -H 'Content-Type: application/json' \
-  -d '{"pedido_id":10,"cliente_id":42,"loja_id":7}'
+  -d '{"pedidoId":10,"clienteId":42,"lojaId":7}'
 ```
 
 Para testar o caminho completo, publique no exchange `pedidos` com a routing key do evento
