@@ -43,6 +43,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Testes unitários (>= 80% de cobertura)
+        run: npm run test:coverage
+
       - name: Sobe o serviço
         run: |
           node src/index.js > app.log 2>&1 &
