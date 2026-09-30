@@ -41,7 +41,7 @@ WebSocket (Socket.IO), na mesma porta:
 const socket = io('http://localhost:8080', { auth: { token } });
 socket.on('pedido:status', (msg) => console.log(msg));
 ```
-...
+....
 O serviço tem duas metades bem separadas:
 
 | | Entrada — **RabbitMQ** | Saída — **WebSocket** | Saída — **Push** |
