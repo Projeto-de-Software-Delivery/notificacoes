@@ -1,0 +1,130 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Serviço de Notificações",
+    "description": "Escuta os eventos do pedido no RabbitMQ e entrega o status atualizado ao app via WebSocket (app aberto) ou push (app fechado). Estas rotas HTTP cobrem registro de device, sessões e um atalho de teste — a entrada de verdade é o RabbitMQ, não HTTP.",
+    "version": "v1"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Erro": {
+        "type": "object",
+        "properties": { "erro": { "type": "string" } }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Healthcheck",
+        "description": "Sem autenticação. Verifica a conexão com o Redis.",
+        "responses": {
+          "200": { "description": "UP" },
+          "503": { "description": "DOWN (Redis inacessível)" }
+        }
+      }
+    },
+    "/devices": {
+      "post": {
+        "summary": "Registra o device_token (FCM/APNs) do usuário",
+        "description": "Chamado pelo app depois do login.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["device_token"],
+                "properties": { "device_token": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Registrado" },
+          "400": { "description": "device_token ausente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Erro" } } } },
+          "401": { "description": "Token JWT ausente/inválido" }
+        }
+      }
+    },
+    "/devices/{token}": {
+      "delete": {
+        "summary": "Remove o device_token do usuário",
+        "description": "Chamado pelo app no logout.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Removido" },
+          "401": { "description": "Token JWT ausente/inválido" }
+        }
+      }
+    },
+    "/sessions/me": {
+      "get": {
+        "summary": "Sockets abertos e devices registrados do usuário autenticado",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": { "type": "string" },
+                    "socket_ids": { "type": "array", "items": { "type": "string" } },
+                    "device_tokens": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Token JWT ausente/inválido" }
+        }
+      }
+    },
+    "/dev/eventos/{routingKey}": {
+      "post": {
+        "summary": "Injeta um evento direto no dispatcher, pulando o RabbitMQ",
+        "description": "Atalho de teste. Em produção (NODE_ENV=production) exige o mesmo Bearer JWT das outras rotas; localmente não.",
+        "parameters": [
+          {
+            "name": "routingKey", "in": "path", "required": true,
+            "schema": { "type": "string", "enum": ["pedido.criado", "pedido.validado", "entrega.aceita", "pedido.retirado", "pedido.entregue"] }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "O campo data do envelope de payloads.md (KAN-13) para o evento escolhido.",
+                "properties": {
+                  "pedidoId": { "type": "string" },
+                  "clienteId": { "type": "string" },
+                  "lojaId": { "type": "string" },
+                  "entregadorId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Evento despachado" },
+          "404": { "description": "routingKey desconhecida" }
+        }
+      }
+    }
+  }
+}
