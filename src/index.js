@@ -16,8 +16,10 @@ const server = http.createServer(app);
 // Lado que ENVIA: servidor WebSocket no mesmo servidor HTTP.
 const io = createSocketServer(server);
 
-// Lado que RECEBE: cada evento do RabbitMQ vai para o dispatcher.
-startConsumer((routingKey, evento) => dispatch(io, routingKey, evento));
+// Lado que RECEBE: cada evento do RabbitMQ vai para o dispatcher. A mensagem
+// chega no envelope do payloads.md ({eventId, eventType, version, occurredAt,
+// data}); só o `data` interessa ao dispatcher.
+startConsumer((routingKey, envelope) => dispatch(io, routingKey, envelope.data));
 
 // Autenticação por JWT (o mesmo token que o API Gateway valida).
 function auth(req, res, next) {

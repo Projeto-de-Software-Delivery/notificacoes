@@ -132,7 +132,7 @@
     },
     {
       "name": "Simular eventos (sem RabbitMQ)",
-      "description": "Injeta o evento direto no dispatcher. Na VM (produção) exige o token da collection; localmente não. O cliente_id/loja_id/entregador_id do body precisam bater com o sub do seu token para o aviso chegar em você.",
+      "description": "Injeta o evento direto no dispatcher. Na VM (produção) exige o token da collection; localmente não. O clienteId/lojaId/entregadorId do body precisam bater com o sub do seu token para o aviso chegar em você.",
       "item": [
         {
           "name": "pedido.criado",
@@ -146,7 +146,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}"
+              "raw": "{\n  \"pedidoId\": 10,\n  \"clienteId\": 42,\n  \"lojaId\": 7\n}"
             },
             "url": "{{baseUrl}}/dev/eventos/pedido.criado"
           }
@@ -163,7 +163,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7\n}"
+              "raw": "{\n  \"pedidoId\": 10,\n  \"clienteId\": 42,\n  \"lojaId\": 7\n}"
             },
             "url": "{{baseUrl}}/dev/eventos/pedido.validado"
           }
@@ -180,7 +180,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+              "raw": "{\n  \"pedidoId\": 10,\n  \"clienteId\": 42,\n  \"lojaId\": 7,\n  \"entregadorId\": 13\n}"
             },
             "url": "{{baseUrl}}/dev/eventos/entrega.aceita"
           }
@@ -197,7 +197,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+              "raw": "{\n  \"pedidoId\": 10,\n  \"clienteId\": 42,\n  \"lojaId\": 7,\n  \"entregadorId\": 13\n}"
             },
             "url": "{{baseUrl}}/dev/eventos/pedido.retirado"
           }
@@ -214,7 +214,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 10,\n  \"cliente_id\": 42,\n  \"loja_id\": 7,\n  \"entregador_id\": 13\n}"
+              "raw": "{\n  \"pedidoId\": 10,\n  \"clienteId\": 42,\n  \"lojaId\": 7,\n  \"entregadorId\": 13\n}"
             },
             "url": "{{baseUrl}}/dev/eventos/pedido.entregue"
           }
@@ -223,7 +223,7 @@
     },
     {
       "name": "RabbitMQ: publicar eventos",
-      "description": "Publica no exchange \"pedidos\" pela API do painel do RabbitMQ, como os outros serviços fariam. Funciona em produção (ao contrário do /dev/eventos). Resposta esperada: {\"routed\":true}. O cliente_id do payload precisa ser o sub do token para o aviso chegar em você.",
+      "description": "Publica no exchange \"pedidos\" pela API do painel do RabbitMQ, como os outros serviços fariam. Funciona em produção (ao contrário do /dev/eventos). Resposta esperada: {\"routed\":true}. O clienteId dentro de data no payload precisa ser o sub do token para o aviso chegar em você.",
       "item": [
         {
           "name": "pedido.criado",
@@ -252,7 +252,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.criado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7}\",\n  \"payload_encoding\": \"string\"\n}"
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.criado\",\n  \"payload\": \"{\\\"eventId\\\": \\\"11111111-1111-1111-1111-111111111111\\\", \\\"eventType\\\": \\\"pedido.criado\\\", \\\"version\\\": 1, \\\"occurredAt\\\": \\\"2026-09-30T14:00:00Z\\\", \\\"data\\\": {\\\"pedidoId\\\": 10, \\\"clienteId\\\": 42, \\\"lojaId\\\": 7}}\",\n  \"payload_encoding\": \"string\"\n}"
             },
             "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
@@ -284,7 +284,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.validado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7}\",\n  \"payload_encoding\": \"string\"\n}"
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.validado\",\n  \"payload\": \"{\\\"eventId\\\": \\\"11111111-1111-1111-1111-111111111111\\\", \\\"eventType\\\": \\\"pedido.validado\\\", \\\"version\\\": 1, \\\"occurredAt\\\": \\\"2026-09-30T14:00:00Z\\\", \\\"data\\\": {\\\"pedidoId\\\": 10, \\\"clienteId\\\": 42, \\\"lojaId\\\": 7}}\",\n  \"payload_encoding\": \"string\"\n}"
             },
             "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
@@ -316,7 +316,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"entrega.aceita\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"entrega.aceita\",\n  \"payload\": \"{\\\"eventId\\\": \\\"11111111-1111-1111-1111-111111111111\\\", \\\"eventType\\\": \\\"entrega.aceita\\\", \\\"version\\\": 1, \\\"occurredAt\\\": \\\"2026-09-30T14:00:00Z\\\", \\\"data\\\": {\\\"pedidoId\\\": 10, \\\"clienteId\\\": 42, \\\"lojaId\\\": 7, \\\"entregadorId\\\": 13}}\",\n  \"payload_encoding\": \"string\"\n}"
             },
             "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
@@ -348,7 +348,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.retirado\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.retirado\",\n  \"payload\": \"{\\\"eventId\\\": \\\"11111111-1111-1111-1111-111111111111\\\", \\\"eventType\\\": \\\"pedido.retirado\\\", \\\"version\\\": 1, \\\"occurredAt\\\": \\\"2026-09-30T14:00:00Z\\\", \\\"data\\\": {\\\"pedidoId\\\": 10, \\\"clienteId\\\": 42, \\\"lojaId\\\": 7, \\\"entregadorId\\\": 13}}\",\n  \"payload_encoding\": \"string\"\n}"
             },
             "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
@@ -380,7 +380,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.entregue\",\n  \"payload\": \"{\\\"pedido_id\\\":10,\\\"cliente_id\\\":42,\\\"loja_id\\\":7,\\\"entregador_id\\\":13}\",\n  \"payload_encoding\": \"string\"\n}"
+              "raw": "{\n  \"properties\": {},\n  \"routing_key\": \"pedido.entregue\",\n  \"payload\": \"{\\\"eventId\\\": \\\"11111111-1111-1111-1111-111111111111\\\", \\\"eventType\\\": \\\"pedido.entregue\\\", \\\"version\\\": 1, \\\"occurredAt\\\": \\\"2026-09-30T14:00:00Z\\\", \\\"data\\\": {\\\"pedidoId\\\": 10, \\\"clienteId\\\": 42, \\\"lojaId\\\": 7, \\\"entregadorId\\\": 13}}\",\n  \"payload_encoding\": \"string\"\n}"
             },
             "url": "{{rabbitApi}}/api/exchanges/%2F/pedidos/publish"
           }
