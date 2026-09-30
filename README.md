@@ -185,6 +185,23 @@ Todas menos o `/health` exigem `Authorization: Bearer <JWT>`, com as claims `sub
 
 ---
 
+## Testes
+
+```bash
+REDIS_URL=redis://localhost:6379 npm test              # só roda os testes
+REDIS_URL=redis://localhost:6379 npm run test:coverage  # roda + exige >= 80% de linha/função
+```
+
+Precisa de um Redis real acessível em `REDIS_URL` (os testes de `devices`,
+`push` e do servidor Socket.IO usam um de verdade, sem mock — `docker run -d
+-p 6379:6379 redis:7-alpine` resolve). `index.js` e `consumer.js` (bootstrap
+e conexão AMQP) ficam fora da cobertura medida — quem cobre esses dois é o
+job `smoke` do CI, que sobe o serviço inteiro contra RabbitMQ real. O caminho
+de push via FCM de verdade (`push.js`, com credencial do Firebase) também
+fica fora: sem uma credencial real não dá pra testar sem virar teste de
+mentira — o caminho em "modo log" (sem credencial, o que este projeto usa
+por padrão) está coberto.
+
 ## Rodando
 
 ```bash
