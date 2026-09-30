@@ -183,6 +183,8 @@ O WebSocket só alcança quem está com o app aberto. Se o usuário **não tem n
 
 Todas menos o `/health` exigem `Authorization: Bearer <JWT>`, com as claims `sub` e `role` (`cliente` | `loja` | `entregador`).
 
+Spec completa (request/response, schemas) em `openapi.json`, servida como Swagger UI em `/docs` com a aplicação rodando.
+
 ---
 
 ## Testes

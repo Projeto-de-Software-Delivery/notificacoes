@@ -1,5 +1,6 @@
 import http from 'node:http';
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config.js';
 import { redis } from './redis.js';
 import { dispatch } from './dispatcher.js';
@@ -7,9 +8,11 @@ import { startConsumer } from './recebe-rabbitmq/consumer.js';
 import { TOPICOS } from './recebe-rabbitmq/eventos.js';
 import { createSocketServer, userIdFromToken, room } from './envia-websocket/socket.js';
 import { devices } from './envia-push/devices.js';
+import openapi from '../openapi.json' with { type: 'json' };
 
 const app = express();
 app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 const server = http.createServer(app);
 
